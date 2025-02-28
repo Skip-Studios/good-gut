@@ -5,6 +5,7 @@ import '../services/benefits_service.dart';
 import '../models/produce_item.dart';
 import 'package:intl/intl.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../services/analytics_service.dart';
 
 extension StringExtension on String {
   String capitalize() {
@@ -23,6 +24,13 @@ class _HistoryPageState extends State<HistoryPage> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   String _selectedPeriod = 'Day';
   int _offset = 0;
+  final _analytics = AnalyticsService();
+
+  @override
+  void initState() {
+    super.initState();
+    _analytics.logScreenView(screenName: 'history_page');
+  }
 
   DateTime get _startDate {
     final now = DateTime.now();
@@ -73,6 +81,7 @@ class _HistoryPageState extends State<HistoryPage> {
     setState(() {
       _offset++;
     });
+    _logHistoryView();
   }
 
   void _navigateForward() {
@@ -80,7 +89,16 @@ class _HistoryPageState extends State<HistoryPage> {
       setState(() {
         _offset--;
       });
+      _logHistoryView();
     }
+  }
+
+  void _logHistoryView() {
+    _analytics.logViewHistory(
+      period: _selectedPeriod,
+      startDate: _startDate,
+      endDate: _endDate,
+    );
   }
 
   int _roundUpToNearestMultipleOf5(int number) {
@@ -166,6 +184,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         _selectedPeriod = newSelection.first;
                         _offset = 0;
                       });
+                      _logHistoryView();
                     },
                     showSelectedIcon: false,
                   ),

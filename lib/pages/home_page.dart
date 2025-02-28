@@ -5,6 +5,7 @@ import 'daily_tracking_page.dart';
 import 'goals_page.dart';
 import 'history_page.dart';
 import 'info_page.dart';
+import '../services/analytics_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool _adsLoaded = false;
   final AdmobService _adService = AdmobService();
+  final _analytics = AnalyticsService();
 
   final List<Widget> _pages = [
     const DailyTrackingPage(),
@@ -29,6 +31,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _adService.addListener(_onAdStatusChanged);
+    _analytics.logScreenView(screenName: 'home_page');
   }
 
   @override
@@ -47,6 +50,25 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _selectedIndex = index;
     });
+    // Track page changes within the bottom navigation
+    _analytics.logScreenView(
+      screenName: _getScreenName(index),
+    );
+  }
+
+  String _getScreenName(int index) {
+    switch (index) {
+      case 0:
+        return 'today_page';
+      case 1:
+        return 'history_page';
+      case 2:
+        return 'goals_page';
+      case 3:
+        return 'info_page';
+      default:
+        return 'unknown_page';
+    }
   }
 
   @override

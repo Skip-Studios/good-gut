@@ -5,6 +5,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:good_gut/pages/home_page.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'services/analytics_service.dart';
 
 void main() async {
   // Ensure Flutter bindings are initialized
@@ -15,6 +17,9 @@ void main() async {
   await getDatabasesPath();
   // Initialize Google Mobile Ads
   MobileAds.instance.initialize();
+
+  // Log app open event
+  await AnalyticsService().logAppOpen();
 
   runApp(const MyApp());
 }
@@ -54,6 +59,9 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
+      navigatorObservers: [
+        FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+      ],
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {

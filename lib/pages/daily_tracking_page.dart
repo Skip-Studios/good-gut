@@ -4,6 +4,7 @@ import '../models/produce_item.dart';
 import '../widgets/add_produce_dialog.dart';
 import '../services/database_helper.dart';
 import '../services/benefits_service.dart';
+import '../services/analytics_service.dart';
 
 class DailyTrackingPage extends StatefulWidget {
   const DailyTrackingPage({super.key});
@@ -14,12 +15,14 @@ class DailyTrackingPage extends StatefulWidget {
 
 class _DailyTrackingPageState extends State<DailyTrackingPage> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  final _analytics = AnalyticsService();
   List<ProduceItem> _produceItems = [];
 
   @override
   void initState() {
     super.initState();
     _loadTodaysProduce();
+    _analytics.logScreenView(screenName: 'daily_tracking_page');
   }
 
   Future<void> _loadTodaysProduce() async {
@@ -38,12 +41,23 @@ class _DailyTrackingPageState extends State<DailyTrackingPage> {
     if (newProduce != null) {
       await _dbHelper.insertProduce(newProduce);
       await _loadTodaysProduce();
+
+      // Track produce addition
+      _analytics.logAddProduce(
+        produceName: newProduce.name,
+        category: newProduce.category,
+      );
     }
   }
 
   Future<void> _deleteProduce(ProduceItem item) async {
     await _dbHelper.deleteProduce(item);
     await _loadTodaysProduce();
+
+    // Track produce deletion
+    _analytics.logFeatureUse(
+      featureName: 'delete_produce',
+    );
   }
 
   IconData _getCategoryIcon(String category) {

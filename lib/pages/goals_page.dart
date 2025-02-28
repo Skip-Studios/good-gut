@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
+import '../services/analytics_service.dart';
 
 class GoalsPage extends StatefulWidget {
   const GoalsPage({super.key});
@@ -17,6 +18,7 @@ class _GoalsPageState extends State<GoalsPage> {
 
   int _weeklyGoal = 30;
   int _dailyGoal = 5;
+  final _analytics = AnalyticsService();
 
   // Add tips list
   static const List<String> _tips = [
@@ -50,6 +52,7 @@ class _GoalsPageState extends State<GoalsPage> {
     super.initState();
     _loadGoals();
     _initializeDailyTips();
+    _analytics.logScreenView(screenName: 'goals_page');
   }
 
   void _initializeDailyTips() {
@@ -74,6 +77,9 @@ class _GoalsPageState extends State<GoalsPage> {
       final nextIndex = (currentIndex + 1) % _dailyTips.length;
       _currentTip = _dailyTips[nextIndex];
     });
+
+    // Track tip interaction
+    _analytics.logFeatureUse(featureName: 'view_tip');
   }
 
   Future<void> _loadGoals() async {
@@ -86,8 +92,16 @@ class _GoalsPageState extends State<GoalsPage> {
 
   Future<void> _updateGoal(String key, int value) async {
     final prefs = await SharedPreferences.getInstance();
+    final oldValue = key == _weeklyGoalKey ? _weeklyGoal : _dailyGoal;
     await prefs.setInt(key, value);
     await _loadGoals();
+
+    // Track goal updates
+    _analytics.logGoalUpdate(
+      goalType: key == _weeklyGoalKey ? 'weekly' : 'daily',
+      oldValue: oldValue,
+      newValue: value,
+    );
   }
 
   Future<void> _showGoalDialog(BuildContext context, String title, String key,

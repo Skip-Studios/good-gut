@@ -1,13 +1,48 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/analytics_service.dart';
 
-class InfoPage extends StatelessWidget {
+class InfoPage extends StatefulWidget {
   const InfoPage({super.key});
 
-  Future<void> _launchURL(String url) async {
-    if (!await launchUrl(Uri.parse(url))) {
-      throw Exception('Could not launch $url');
+  @override
+  State<InfoPage> createState() => _InfoPageState();
+}
+
+class _InfoPageState extends State<InfoPage> {
+  final _analytics = AnalyticsService();
+
+  @override
+  void initState() {
+    super.initState();
+    _analytics.logScreenView(screenName: 'info_page');
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      _analytics.logFeatureUse(featureName: 'sign_out');
+    } catch (e) {
+      _analytics.logError(
+        errorCode: 'sign_out_error',
+        message: e.toString(),
+      );
+    }
+  }
+
+  Future<void> _launchURL(String url, String linkName) async {
+    try {
+      if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(Uri.parse(url));
+        _analytics.logFeatureUse(featureName: 'link_click_$linkName');
+      }
+    } catch (e) {
+      _analytics.logError(
+        errorCode: 'url_launch_error',
+        message: 'Failed to launch $url: $e',
+      );
     }
   }
 
@@ -46,25 +81,25 @@ class InfoPage extends StatelessWidget {
               leading: const Icon(Icons.privacy_tip_outlined),
               title: const Text('Privacy Policy'),
               onTap: () => _launchURL(
-                  'https://goodgutapp.com/privacy'), // Update URL later
+                  'https://goodgutapp.com/privacy', 'privacy_policy'),
             ),
             ListTile(
               leading: const Icon(Icons.description_outlined),
               title: const Text('Terms of Use'),
-              onTap: () => _launchURL(
-                  'https://goodgutapp.com/terms'), // Update URL later
+              onTap: () =>
+                  _launchURL('https://goodgutapp.com/terms', 'terms_of_use'),
             ),
             ListTile(
               leading: const Icon(Icons.help_outline),
               title: const Text('Support'),
-              onTap: () => _launchURL(
-                  'https://goodgutapp.com/support'), // Update URL later
+              onTap: () =>
+                  _launchURL('https://goodgutapp.com/support', 'support'),
             ),
             const Spacer(),
             Center(
               child: FilledButton(
                 onPressed: () async {
-                  await AuthService().signOut();
+                  await _signOut();
                 },
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.all(16),

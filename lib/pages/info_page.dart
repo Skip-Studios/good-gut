@@ -35,11 +35,23 @@ class InfoPage extends StatelessWidget {
             ),
             const Spacer(),
             Center(
-              child: FilledButton.tonal(
+              child: FilledButton(
                 onPressed: () async {
                   await AuthService().signOut();
                 },
-                child: const Text('Logout'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.all(16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  backgroundColor: const Color(0xFFED4040),
+                ),
+                child: const Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ),
           ],

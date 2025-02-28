@@ -82,10 +82,9 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const SizedBox(height: 48),
                   // App Logo/Icon
-                  Icon(
-                    Icons.eco_rounded,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.primary,
+                  Image.asset(
+                    'assets/images/goodgut-logo.png',
+                    height: 64,
                   ),
                   const SizedBox(height: 24),
                   // Title

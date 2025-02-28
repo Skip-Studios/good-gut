@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:good_gut/services/admob_service.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'daily_tracking_page.dart';
 import 'goals_page.dart';
 import 'history_page.dart';
@@ -13,6 +15,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  bool _adsLoaded = false;
+  final AdmobService _adService = AdmobService();
 
   final List<Widget> _pages = [
     const DailyTrackingPage(),
@@ -20,6 +24,24 @@ class _HomePageState extends State<HomePage> {
     const HistoryPage(),
     const InfoPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _adService.addListener(_onAdStatusChanged);
+  }
+
+  @override
+  void dispose() {
+    _adService.removeListener(_onAdStatusChanged);
+    super.dispose();
+  }
+
+  void _onAdStatusChanged(bool isLoaded) {
+    setState(() {
+      _adsLoaded = isLoaded;
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -36,6 +58,8 @@ class _HomePageState extends State<HomePage> {
     final isPhone = aspectRatio > 1.5 && aspectRatio < 2.5;
     final isPortrait =
         MediaQuery.of(context).orientation == Orientation.portrait;
+
+    _adService.loadAd(MediaQuery.of(context).size.width.truncate());
 
     return Scaffold(
       body: Row(
@@ -72,18 +96,25 @@ class _HomePageState extends State<HomePage> {
       ),
       bottomNavigationBar: diagonal > 700 &&
               ((!isPhone && isPortrait) || (!isPhone && !isPortrait))
-          ? Container(
-              height: 65,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                border: Border(
-                  top: BorderSide(
-                    color:
-                        Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ? _adsLoaded && _adService.bannerAd != null
+              ? Container(
+                  height: 65,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    border: Border(
+                      top: BorderSide(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outline
+                            .withOpacity(0.2),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            )
+                  child: AdWidget(
+                    ad: _adService.bannerAd!,
+                  ),
+                )
+              : Container()
           : Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -110,20 +141,24 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-                Container(
-                  height: 65,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    border: Border(
-                      top: BorderSide(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outline
-                            .withOpacity(0.2),
+                if (_adsLoaded && _adService.bannerAd != null)
+                  Container(
+                    height: 65,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      border: Border(
+                        top: BorderSide(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withOpacity(0.2),
+                        ),
                       ),
                     ),
+                    child: AdWidget(
+                      ad: _adService.bannerAd!,
+                    ),
                   ),
-                ),
               ],
             ),
     );
@@ -139,7 +174,7 @@ class _HomePageState extends State<HomePage> {
           Icon(
             icon,
             color: isSelected
-                ? Theme.of(context).colorScheme.primary
+                ? const Color(0xFFED4040)
                 : Theme.of(context).colorScheme.onSurface,
           ),
           const SizedBox(height: 4),
@@ -148,7 +183,7 @@ class _HomePageState extends State<HomePage> {
             style: TextStyle(
               fontSize: 12,
               color: isSelected
-                  ? Theme.of(context).colorScheme.primary
+                  ? const Color(0xFFED4040)
                   : Theme.of(context).colorScheme.onSurface,
             ),
           ),

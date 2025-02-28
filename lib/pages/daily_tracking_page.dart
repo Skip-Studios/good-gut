@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../models/produce_item.dart';
 import '../widgets/add_produce_dialog.dart';
 import '../services/database_helper.dart';
@@ -56,9 +57,9 @@ class _DailyTrackingPageState extends State<DailyTrackingPage> {
       case 'mushroom':
         return Icons.forest;
       case 'nut':
-        return Icons.grain;
+        return FontAwesomeIcons.seedling;
       case 'grain':
-        return Icons.agriculture;
+        return Icons.grain;
       default:
         return Icons.eco;
     }

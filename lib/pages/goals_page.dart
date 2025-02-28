@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math';
 
 class GoalsPage extends StatefulWidget {
   const GoalsPage({super.key});
@@ -19,30 +20,59 @@ class _GoalsPageState extends State<GoalsPage> {
 
   // Add tips list
   static const List<String> _tips = [
-    'Try adding leafy greens to your morning smoothie 🥬',
-    'Keep pre-cut vegetables in your fridge for easy snacking 🥕',
-    'Add mushrooms to your pasta for an immune system boost 🍄',
-    'Sprinkle nuts on your breakfast for healthy fats 🥜',
-    'Fresh herbs can transform any dish while adding health benefits 🌿',
-    'Challenge yourself to try one new vegetable each week 🥦',
-    'Add fruit to your water for natural flavor 🍎',
-    'Keep frozen vegetables for convenient meal prep 🧊',
-    'Start your day with a piece of fruit 🍌',
-    'Add vegetables to your favorite sandwich 🥪',
+    'Try adding leafy greens to your smoothie - because drinking your salad is way more fun! 🥬',
+    'Keep pre-cut veggies in your fridge. Your future hungry self will thank you! 🥕',
+    'Add mushrooms to your pasta - they\'re the fun-guys of the food world! 🍄',
+    'Sprinkle nuts on your breakfast. They\'re not just for squirrels! 🥜',
+    'Fresh herbs are like nature\'s flavor confetti - sprinkle them everywhere! 🌿',
+    'Challenge yourself to try one new veggie each week. Who knows, you might find your soulmate in a sweet potato! 🥔',
+    'Add fruit to your water - because plain water is so 2023! 🍎',
+    'Keep frozen veggies handy. They\'re like your emergency backup dancers! 🧊',
+    'Start your day with fruit - it\'s nature\'s candy, but your dentist approves! 🍌',
+    'Add veggies to your sandwich. It\'s like giving your lunch a vitamin hug! 🥪',
+    'Mix herbs into your eggs - because plain eggs are eggs-tremely boring! 🍳',
+    'Sneak spinach into your smoothies - ninja nutrition at its finest! 🥤',
+    'Roast your nuts for extra flavor - they\'re like tiny flavor bombs! 💥',
+    'Try grain bowls - they\'re like a warm hug for your gut! 🌾',
+    'Make mushroom "bacon" - because fungi can be fun, guys! 🥓',
+    'Add berries to your breakfast - they\'re like tiny antioxidant superheroes! 🦸‍♂️',
+    'Experiment with different herbs - it\'s like a flavor adventure in your kitchen! 🌺',
+    'Mix different colored veggies - eat the rainbow, taste the rainbow! 🌈',
+    'Try overnight oats - because future you deserves a delicious breakfast! 🥣',
+    'Make veggie noodles - they\'re like regular noodles but wearing a cape! 🦸‍♀️',
   ];
 
+  late List<String> _dailyTips;
   late String _currentTip;
 
   @override
   void initState() {
     super.initState();
     _loadGoals();
-    _randomizeTip();
+    _initializeDailyTips();
+  }
+
+  void _initializeDailyTips() {
+    // Get today's date as a seed
+    final today = DateTime.now().day;
+
+    // Create a repeatable random number generator for today
+    final random = Random(today);
+
+    // Shuffle the tips using today's seed and take first 3
+    final shuffled = List<String>.from(_tips)..shuffle(random);
+    _dailyTips = shuffled.take(3).toList();
+
+    // Set initial tip
+    _currentTip = _dailyTips[0];
   }
 
   void _randomizeTip() {
     setState(() {
-      _currentTip = _tips[DateTime.now().millisecondsSinceEpoch % _tips.length];
+      // Cycle through today's 3 tips
+      final currentIndex = _dailyTips.indexOf(_currentTip);
+      final nextIndex = (currentIndex + 1) % _dailyTips.length;
+      _currentTip = _dailyTips[nextIndex];
     });
   }
 
@@ -103,19 +133,24 @@ class _GoalsPageState extends State<GoalsPage> {
     required VoidCallback onTap,
   }) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text('$value $description'),
-          ],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text('$value $description'),
+            ],
+          ),
         ),
       ),
     );
@@ -245,10 +280,12 @@ class _GoalsPageState extends State<GoalsPage> {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: _randomizeTip,
-                  tooltip: 'Show another tip',
+                Tooltip(
+                  message: 'Show another tip (3 available per day)',
+                  child: IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: _randomizeTip,
+                  ),
                 ),
               ],
             ),

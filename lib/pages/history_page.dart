@@ -4,6 +4,7 @@ import '../services/database_helper.dart';
 import '../services/benefits_service.dart';
 import '../models/produce_item.dart';
 import 'package:intl/intl.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 extension StringExtension on String {
   String capitalize() {
@@ -452,8 +453,8 @@ class _HistoryPageState extends State<HistoryPage> {
       'vegetable': Icons.eco,
       'herb': Icons.grass,
       'mushroom': Icons.forest,
-      'nut': Icons.grain,
-      'grain': Icons.agriculture,
+      'nut': FontAwesomeIcons.seedling,
+      'grain': Icons.grain,
     };
 
     final Map<String, Color> categoryColors = {

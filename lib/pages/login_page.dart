@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'dart:io' show Platform;
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -80,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 32),
                   // App Logo/Icon
                   Image.asset(
                     'assets/images/goodgut-logo.png',
@@ -159,7 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   if (_isLoading)
                     const Center(child: CircularProgressIndicator())
                   else
@@ -201,8 +203,11 @@ class _LoginPageState extends State<LoginPage> {
                         OutlinedButton.icon(
                           onPressed: () async {
                             try {
+                              print('Starting Google Sign In...');
                               await _authService.signInWithGoogle();
+                              print('Google Sign In completed successfully');
                             } catch (e) {
+                              print('Google Sign In error: $e');
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text(e.toString())),
@@ -230,7 +235,26 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        if (Platform.isIOS) ...[
+                          const SizedBox(height: 16),
+                          SignInWithAppleButton(
+                            onPressed: () async {
+                              try {
+                                await _authService.signInWithApple();
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.toString())),
+                                  );
+                                }
+                              }
+                            },
+                            style: SignInWithAppleButtonStyle.black,
+                            height: 50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
                         TextButton(
                           onPressed: () {
                             setState(() {

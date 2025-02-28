@@ -174,7 +174,7 @@ class _HomePageState extends State<HomePage> {
           Icon(
             icon,
             color: isSelected
-                ? const Color(0xFFED4040)
+                ? Theme.of(context).colorScheme.primary
                 : Theme.of(context).colorScheme.onSurface,
           ),
           const SizedBox(height: 4),
@@ -183,7 +183,7 @@ class _HomePageState extends State<HomePage> {
             style: TextStyle(
               fontSize: 12,
               color: isSelected
-                  ? const Color(0xFFED4040)
+                  ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).colorScheme.onSurface,
             ),
           ),

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdmobService {
@@ -14,18 +13,18 @@ class AdmobService {
 
   BannerAd? bannerAd;
   bool isLoaded = false;
-  
+
   // Listener callbacks to notify when ad loads
   final List<Function(bool)> _listeners = [];
-  
+
   void addListener(Function(bool) listener) {
     _listeners.add(listener);
   }
-  
+
   void removeListener(Function(bool) listener) {
     _listeners.remove(listener);
   }
-  
+
   void _notifyListeners() {
     for (var listener in _listeners) {
       listener(isLoaded);
@@ -35,7 +34,7 @@ class AdmobService {
   /// Loads a banner ad.
   void loadAd(int width) async {
     if (bannerAd != null) return; // Prevent reloading
-    
+
     // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
     final adSize =
         await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
@@ -70,7 +69,7 @@ class AdmobService {
       ),
     )..load();
   }
-  
+
   void dispose() {
     bannerAd?.dispose();
     bannerAd = null;

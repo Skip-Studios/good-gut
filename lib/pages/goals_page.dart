@@ -152,17 +152,30 @@ class _GoalsPageState extends State<GoalsPage> {
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
             children: [
-              Text(
-                title,
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('$value $description'),
+                  ],
+                ),
               ),
-              const SizedBox(height: 8),
-              Text('$value $description'),
+              Icon(
+                Icons.edit_outlined,
+                size: 20,
+                color: Colors.grey[400],
+              ),
             ],
           ),
         ),

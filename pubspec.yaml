@@ -45,6 +45,8 @@ dependencies:
   sign_in_with_apple: ^5.0.0
   font_awesome_flutter: ^10.8.0
   url_launcher: ^6.2.5
+  google_fonts: ^6.1.0
+  flutter_native_splash: ^2.3.10
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -102,3 +104,22 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  color_dark: "#1A1A1A"
+  image: assets/images/goodgut-logo.png
+  image_dark: assets/images/goodgut-logo.png
+  
+  android_12:
+    color: "#FFFFFF"
+    color_dark: "#1A1A1A"
+    image: assets/images/goodgut-logo.png
+    image_dark: assets/images/goodgut-logo.png
+    
+  web: false
+  
+  android: true
+  ios: true
+  
+  fullscreen: true

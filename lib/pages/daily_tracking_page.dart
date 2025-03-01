@@ -5,6 +5,7 @@ import '../widgets/add_produce_dialog.dart';
 import '../services/database_helper.dart';
 import '../services/benefits_service.dart';
 import '../services/analytics_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DailyTrackingPage extends StatefulWidget {
   const DailyTrackingPage({super.key});
@@ -17,18 +18,94 @@ class _DailyTrackingPageState extends State<DailyTrackingPage> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final _analytics = AnalyticsService();
   List<ProduceItem> _produceItems = [];
+  int _uniqueDailyCount = 0;
+  int _uniqueWeeklyCount = 0;
+  int _dailyGoal = 5;
+  int _weeklyGoal = 30;
+  bool _isBenefitsExpanded = true;
+  String _lastBenefitsSummary = '';
+  String _randomBenefit = '';
+
+  static const List<String> _motivationalMessages = [
+    'Start your journey to better gut health today! 🌱',
+    'Your gut microbiome is waiting for some plant-powered love! 💚',
+    'Ready to boost your health with nature\'s goodness? 🌿',
+    'Every plant you eat is a step towards better health! 🥬',
+    'Time to nourish your gut with plant diversity! 🥕',
+  ];
 
   @override
   void initState() {
     super.initState();
     _loadTodaysProduce();
+    _loadGoals();
+    _loadBenefitsState();
+    _setRandomBenefit();
     _analytics.logScreenView(screenName: 'daily_tracking_page');
+  }
+
+  Future<void> _loadGoals() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _dailyGoal = prefs.getInt('daily_goal') ?? 5;
+      _weeklyGoal = prefs.getInt('weekly_goal') ?? 30;
+    });
+  }
+
+  Future<void> _loadBenefitsState() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isBenefitsExpanded = prefs.getBool('benefits_expanded') ?? true;
+    });
+  }
+
+  Future<void> _saveBenefitsState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('benefits_expanded', _isBenefitsExpanded);
+  }
+
+  void _setRandomBenefit() {
+    final random = DateTime.now().millisecondsSinceEpoch;
+    final categories = [
+      'fruit',
+      'vegetable',
+      'herb',
+      'mushroom',
+      'nut',
+      'grain'
+    ];
+    final randomCategory = categories[random % categories.length];
+    final benefits = BenefitsService.getBenefitsForCategory(randomCategory);
+    if (benefits.isNotEmpty) {
+      setState(() {
+        _randomBenefit = benefits[random % benefits.length];
+      });
+    }
   }
 
   Future<void> _loadTodaysProduce() async {
     final items = await _dbHelper.getProduceForDate(DateTime.now());
+    final uniqueDaily =
+        await _dbHelper.getUniqueDailyProduceCount(DateTime.now());
+    final uniqueWeekly =
+        await _dbHelper.getUniqueWeeklyProduceCount(DateTime.now());
+
+    final newBenefitsSummary = BenefitsService.generateBenefitsSummary(
+      items.map((item) => item.category).toList(),
+    );
+
     setState(() {
       _produceItems = items;
+      _uniqueDailyCount = uniqueDaily;
+      _uniqueWeeklyCount = uniqueWeekly;
+
+      // Auto-expand if benefits have changed
+      if (newBenefitsSummary != _lastBenefitsSummary &&
+          newBenefitsSummary.isNotEmpty) {
+        _isBenefitsExpanded = true;
+        _saveBenefitsState();
+      }
+      _lastBenefitsSummary = newBenefitsSummary;
     });
   }
 
@@ -162,8 +239,8 @@ class _DailyTrackingPageState extends State<DailyTrackingPage> {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Today\'s Progress',
@@ -172,10 +249,60 @@ class _DailyTrackingPageState extends State<DailyTrackingPage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Text(
-              '${_produceItems.length} items',
-              style: const TextStyle(fontSize: 18),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Daily Unique Plants',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$_uniqueDailyCount / $_dailyGoal',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Weekly Unique Plants',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$_uniqueWeeklyCount / $_weeklyGoal',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
+            if (_produceItems.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Total entries today: ${_produceItems.length}',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -183,40 +310,96 @@ class _DailyTrackingPageState extends State<DailyTrackingPage> {
   }
 
   Widget _buildBenefitsCard() {
+    final bool hasProduceToday = _produceItems.isNotEmpty;
+    final random = DateTime.now().day;
+    final motivationalMessage =
+        _motivationalMessages[random % _motivationalMessages.length];
+
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.tips_and_updates,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Health Benefits',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _isBenefitsExpanded = !_isBenefitsExpanded;
+            _saveBenefitsState();
+            if (!hasProduceToday) {
+              _setRandomBenefit();
+            }
+          });
+
+          // Track benefits card interaction
+          _analytics.logFeatureUse(
+            featureName:
+                _isBenefitsExpanded ? 'expand_benefits' : 'collapse_benefits',
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    hasProduceToday ? Icons.tips_and_updates : Icons.eco,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _getBenefitsSummary(),
-              style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 14,
+                  const SizedBox(width: 8),
+                  Text(
+                    hasProduceToday ? 'Health Benefits' : 'Did you know?',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    _isBenefitsExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: Colors.grey[600],
+                  ),
+                ],
               ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+              if (_isBenefitsExpanded) ...[
+                const SizedBox(height: 8),
+                if (hasProduceToday)
+                  Text(
+                    _getBenefitsSummary(),
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontSize: 14,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                else ...[
+                  Text(
+                    'Plants can provide $_randomBenefit. Add a plant now.',
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontSize: 14,
+                    ),
+                  ),
+                  /*const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          motivationalMessage,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),*/
+                ],
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -224,8 +407,36 @@ class _DailyTrackingPageState extends State<DailyTrackingPage> {
 
   Widget _buildProduceList(bool isTablet) {
     if (_produceItems.isEmpty) {
-      return const Center(
-        child: Text('No produce added today'),
+      final random = DateTime.now().day;
+      final motivationalMessage =
+          _motivationalMessages[random % _motivationalMessages.length];
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Plants can provide $_randomBenefit. Add a plant now.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[700],
+                ),
+              ),
+              /*const SizedBox(height: 16),
+              Text(
+                motivationalMessage,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),*/
+            ],
+          ),
+        ),
       );
     }
 

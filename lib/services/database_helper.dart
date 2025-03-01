@@ -68,6 +68,35 @@ class DatabaseHelper {
     });
   }
 
+  Future<int> getUniqueDailyProduceCount(DateTime date) async {
+    final db = await database;
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    final result = await db.rawQuery('''
+      SELECT COUNT(DISTINCT name) as count
+      FROM produce_items
+      WHERE dateAdded >= ? AND dateAdded < ?
+    ''', [startOfDay.toIso8601String(), endOfDay.toIso8601String()]);
+
+    return result.first['count'] as int;
+  }
+
+  Future<int> getUniqueWeeklyProduceCount(DateTime date) async {
+    final db = await database;
+    final today = DateTime(date.year, date.month, date.day);
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+    final weekEnd = weekStart.add(const Duration(days: 7));
+
+    final result = await db.rawQuery('''
+      SELECT COUNT(DISTINCT name) as count
+      FROM produce_items
+      WHERE dateAdded >= ? AND dateAdded < ?
+    ''', [weekStart.toIso8601String(), weekEnd.toIso8601String()]);
+
+    return result.first['count'] as int;
+  }
+
   Future<List<ProduceItem>> getProduceForDateRange(
       DateTime start, DateTime end) async {
     final db = await database;

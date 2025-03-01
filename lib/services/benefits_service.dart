@@ -68,6 +68,10 @@ class BenefitsService {
     ],
   };
 
+  static List<String> getBenefitsForCategory(String category) {
+    return _benefitsByCategory[category] ?? [];
+  }
+
   static final Map<String, String> _specialCombinations = {
     // Two-ingredient combinations
     'mushroom,vegetable':

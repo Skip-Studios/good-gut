@@ -220,6 +220,93 @@ class _HistoryPageState extends State<HistoryPage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
+
+                // For Day view, always show categories even if empty
+                if (_selectedPeriod == 'Day') {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: padding,
+                      vertical: padding / 2,
+                    ),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Category Breakdown',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 16),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _buildCategoryBox(
+                                    'fruit',
+                                    snapshot.data
+                                            ?.where((item) =>
+                                                item.category == 'fruit')
+                                            .length ??
+                                        0),
+                                _buildCategoryBox(
+                                    'vegetable',
+                                    snapshot.data
+                                            ?.where((item) =>
+                                                item.category == 'vegetable')
+                                            .length ??
+                                        0),
+                                _buildCategoryBox(
+                                    'herb',
+                                    snapshot.data
+                                            ?.where((item) =>
+                                                item.category == 'herb')
+                                            .length ??
+                                        0),
+                                _buildCategoryBox(
+                                    'mushroom',
+                                    snapshot.data
+                                            ?.where((item) =>
+                                                item.category == 'mushroom')
+                                            .length ??
+                                        0),
+                                _buildCategoryBox(
+                                    'nut',
+                                    snapshot.data
+                                            ?.where((item) =>
+                                                item.category == 'nut')
+                                            .length ??
+                                        0),
+                                _buildCategoryBox(
+                                    'grain',
+                                    snapshot.data
+                                            ?.where((item) =>
+                                                item.category == 'grain')
+                                            .length ??
+                                        0),
+                              ],
+                            ),
+                            if (!snapshot.hasData ||
+                                snapshot.data!.isEmpty) ...[
+                              const SizedBox(height: 24),
+                              Center(
+                                child: Text(
+                                  'No data for this period',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(child: Text('No data for this period'));
                 }
